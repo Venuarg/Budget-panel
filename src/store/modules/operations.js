@@ -1,5 +1,11 @@
 export const operations = {
-  state: () => ({ }),
-  mutations: { },
+  state: () => ({
+    data: []
+  }),
+  mutations: {
+    setData (state, payload) {
+      state.data = payload
+    }
+  },
   actions: { }
 }

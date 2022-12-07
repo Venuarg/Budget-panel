@@ -8,7 +8,6 @@
     </div>
   </header>
   <router-view/>
-  {{data}}
 
   <Sidebar v-model:visible="isShow" position="right">
     <form @submit.prevent="handleSubmit(v$.$invalid)">
@@ -90,6 +89,7 @@
 import { ref, reactive } from '@vue/reactivity'
 import { useVuelidate } from '@vuelidate/core'
 import  { required } from '@vuelidate/validators'
+import { useStore } from 'vuex'
 
 import Button from 'primevue/button'
 import Sidebar from 'primevue/sidebar'
@@ -98,8 +98,6 @@ import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Dropdown from 'primevue/dropdown';
 import Textarea from 'primevue/textarea';
-
-
 
 export default {
   components: {
@@ -113,7 +111,7 @@ export default {
   },
 
   setup() {
-
+    const store = useStore()
     const defaultModel = {
       date: null,
       place: null,
@@ -124,6 +122,7 @@ export default {
     }
 
     const data = reactive(JSON.parse(localStorage.getItem('operations') || '[]'))
+    store.commit('setData', data)
     const isShow = ref(false)
     const model = ref({...defaultModel}) // снимаем ссылку на модель, убираем реактивность
 
@@ -152,6 +151,7 @@ export default {
       v$.value.$reset()
       data.push(model.value)
       model.value = {...defaultModel}
+      store.commit('setData', data)
       localStorage.setItem('operations', JSON.stringify(data))
     }
 
