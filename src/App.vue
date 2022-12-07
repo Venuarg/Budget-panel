@@ -8,10 +8,11 @@
     </div>
   </header>
   <router-view/>
+  {{data}}
 
   <Sidebar v-model:visible="isShow" position="right">
-    <form @submit.prevent="handleSubmit(!v$.$invalid)">
-      <div class="p-float-label mt-2">
+    <form @submit.prevent="handleSubmit(v$.$invalid)">
+      <div class="p-float-label mt-1 mb-3">
         <Calendar
           id="date"
           class="w-full"
@@ -21,7 +22,7 @@
         />
         <label for="date">Operation Date</label>
       </div>
-      <div class="p-float-label mt-2">
+      <div class="p-float-label mt-1 mb-3">
         <InputText
             id="place"
             class="w-full"
@@ -31,7 +32,7 @@
         />
         <label for="place">place</label>
       </div>
-      <div class="p-float-label mt-2">
+      <div class="p-float-label mt-1 mb-3">
         <InputText
             id="category"
             class="w-full"
@@ -41,36 +42,46 @@
         />
         <label for="category">category</label>
       </div>
-      <div class="p-float-label mt-2">
+      <div class="p-float-label mt-1 mb-3">
         <InputNumber
             id="amount"
             class="w-full"
             :class="{'p-invalid': v$.$invalid && v$.amount.$dirty}"
             v-model="v$.amount.$model"
             @blur="v$.amount.$touch()"
+            mode="decimal"
+            locale="ru-RU"
+            :minFractionDigits="2"
         />
         <label for="amount">amount</label>
       </div>
-      <div class="p-float-label mt-2">
-        <InputNumber
+      <div class="p-float-label mt-1 mb-3">
+        <Dropdown
             id="card"
             class="w-full"
             :class="{'p-invalid': v$.$invalid && v$.card.$dirty}"
+            :options="cards"
+            optionLabel="label"
+            optionValue="value"
             v-model="v$.card.$model"
             @blur="v$.card.$touch()"
         />
         <label for="card">Card</label>
       </div>
-      <div class="p-float-label mt-2">
-        <InputNumber
+      <div class="p-float-label mt-1 mb-3">
+        <Textarea
             id="description"
             class="w-full"
             :class="{'p-invalid': v$.$invalid && v$.description.$dirty}"
             v-model="v$.description.$model"
             @blur="v$.description.$touch()"
+            :autoResize="true"
+            rows="2"
+            cols="30"
         />
         <label for="description">description</label>
       </div>
+      <Button class="w-full" label="submit" type="submit"/>
     </form>
   </Sidebar>
 </template>
@@ -85,7 +96,9 @@ import Sidebar from 'primevue/sidebar'
 import Calendar from 'primevue/calendar';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
-// import Dropdown from 'primevue/dropdown';
+import Dropdown from 'primevue/dropdown';
+import Textarea from 'primevue/textarea';
+
 
 
 export default {
@@ -95,19 +108,24 @@ export default {
     Calendar,
     InputText,
     InputNumber,
-    // Dropdown
+    Dropdown,
+    Textarea
   },
 
   setup() {
-    const isShow = ref(false)
-    const model = reactive({
+
+    const defaultModel = {
       date: null,
       place: null,
       category: null,
       amount: null,
       card: null,
       description: null
-    })
+    }
+
+    const data = reactive(JSON.parse(localStorage.getItem('operations') || '[]'))
+    const isShow = ref(false)
+    const model = ref({...defaultModel}) // снимаем ссылку на модель, убираем реактивность
 
     const rule = {
       date: [required],
@@ -118,20 +136,31 @@ export default {
       description: [required]
     }
 
+    const cards = [
+      { value: '*5979', label: 'Alpha' },
+      { value: '*9874', label: 'Sber' }
+    ]
+
     const v$ = useVuelidate(rule, model)
 
     function handleSubmit (invalid) {
+      v$.value.$touch()
       if (invalid) {
         console.log('invalid')
         return
       }
-      console.log('Valid')
+      v$.value.$reset()
+      data.push(model.value)
+      model.value = {...defaultModel}
+      localStorage.setItem('operations', JSON.stringify(data))
     }
 
     return {
       v$,
       isShow,
-      handleSubmit
+      handleSubmit,
+      cards,
+      data
     }
   }
 }
